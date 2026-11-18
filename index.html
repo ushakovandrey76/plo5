@@ -1,0 +1,740 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PLO5">
+<meta name="theme-color" content="#17181a">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
+<style>html{background:#17181a}[hidden]{display:none!important}</style>
+<title>PLO5 Обучение</title>
+<style>
+/* Мобильное обучение префлопа: позиции сверху, стол, поиск руки или диапазона. Тёмная тема как в Windows-версии. */
+:root{
+  --bg:#17181a;--panel:#202225;--panel2:#292c30;--line:#33363b;--fg:#e8e9ea;--dim:#8d9298;--gold:#e8a21e;
+  --felt:#101112;--feltEdge:#26282b;--plate:#000;--plateLine:#6f747a;--chip:#8e9196;
+  --fold:#5d6672;--call:#3f9a5f;--raise:#d9822b;--allin:#c0392b;--err:#e5534b;
+  --sS:#d5d8dc;--sH:#e5534b;--sD:#5b9bf0;--sC:#4fb36b;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#f3f4f6;--panel:#fff;--panel2:#e9ebee;--line:#d9dce1;--fg:#1c1e21;--dim:#686e76;--gold:#b87708;
+  --felt:#dfe3e7;--feltEdge:#c9ced4;--plate:#fff;--plateLine:#8b9097;--chip:#7d8289;
+  --fold:#8a93a0;--call:#2f8a52;--raise:#c8701a;--allin:#b0301f;--err:#c23a33;
+  --sS:#23272b;--sH:#d23b36;--sD:#2d6fd0;--sC:#2e8b4f;color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f3f4f6;--panel:#fff;--panel2:#e9ebee;--line:#d9dce1;--fg:#1c1e21;--dim:#686e76;--gold:#b87708;
+  --felt:#dfe3e7;--feltEdge:#c9ced4;--plate:#fff;--plateLine:#8b9097;--chip:#7d8289;
+  --fold:#8a93a0;--call:#2f8a52;--raise:#c8701a;--allin:#b0301f;--err:#c23a33;
+  --sS:#23272b;--sH:#d23b36;--sD:#2d6fd0;--sC:#2e8b4f;color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.35 var(--font);margin:0;
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+.app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:var(--panel2);border-radius:10px;padding:0 14px;min-height:44px}
+button:active{filter:brightness(1.2)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;min-height:30px}
+.top .th{min-height:28px;padding:0 10px;background:var(--panel);color:var(--dim);font-size:12px;border-radius:8px}
+.sheet button.gr{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:none;min-height:48px;font-size:16px;border-radius:8px}
+.sheet button.gr.on{background:var(--panel2)}
+.sheet button.gr span{color:var(--dim);font-size:13px}
+.sheet .sub{padding:0 0 4px 10px}
+.top h1{font-size:18px;font-weight:500;margin:0}
+.seg{display:flex;background:var(--panel);border-radius:9px;padding:2px;gap:2px}
+.seg button{min-height:26px;padding:0 10px;font-size:13px;background:none;color:var(--dim);border-radius:8px}
+.seg button.on{background:var(--panel2);color:var(--fg)}
+.recent{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.recent::-webkit-scrollbar{display:none}
+.recent button{flex:none;min-height:34px;font-size:14px;background:var(--panel);color:var(--dim);white-space:nowrap}
+.pos{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.pos button{padding:0;min-height:48px;font-weight:500;font-size:15px;background:var(--panel)}
+.pos button.on{background:var(--gold);color:#111}
+.pos button.cur{box-shadow:inset 0 0 0 2px var(--gold)}
+.sheet{background:var(--panel);border-radius:12px;padding:6px 6px 8px}
+.sheet h3{margin:10px 10px 4px;font-size:12px;font-weight:500;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.sheet button.sc{display:block;width:100%;text-align:left;background:none;border-radius:8px;min-height:46px;font-size:16px}
+.sheet button.sc:active,.sheet button.sc.on{background:var(--panel2)}
+.cur-title{font-size:17px;font-weight:500;padding:0 2px}
+.cur-title small{color:var(--dim);font-weight:400}
+svg.table{width:100%;height:auto;display:block}
+.t-felt{fill:var(--felt);stroke:var(--feltEdge);stroke-width:6}
+.t-plate{fill:var(--plate);stroke:var(--plateLine);stroke-width:1.5}
+.t-plate.hero{stroke:var(--gold);stroke-width:2}
+.t-plate.off{opacity:.55}
+.t-name{fill:var(--dim);font-size:11px}
+.t-name.hero{fill:var(--gold)}
+.t-stack{fill:var(--fg);font-size:13px}
+.t-pot{fill:var(--fg);font-size:12px}
+.t-potbg{fill:var(--plate);stroke:var(--line)}
+.t-bet{fill:var(--fg);font-size:12px}
+.t-chip{fill:var(--chip);stroke:var(--felt)}
+.t-back{fill:#b9bcc0;stroke:#6f7378}
+.t-dbtn{fill:#e8e8e8;stroke:#888}
+.t-dtxt{fill:#111;font-size:11px;font-weight:600}
+.bar{display:flex;height:34px;border-radius:9px;overflow:hidden;background:var(--panel2)}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-direction:column;gap:6px}
+.lg{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;font-size:16px}
+.lg b{font-weight:500;font-variant-numeric:tabular-nums}
+.lg span.d{width:14px;height:14px;border-radius:4px}
+.lg em{font-style:normal;color:var(--dim);font-size:13px;margin-left:6px}
+.note{color:var(--dim);font-size:14px}
+.err{color:var(--err);font-size:14px}
+.searchrow{display:flex;gap:8px}
+.field{position:relative;flex:1;min-width:0}
+.field input{width:100%;min-height:54px;font-size:19px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 46px 0 14px;caret-color:var(--gold)}
+.field .x{position:absolute;right:4px;top:5px;width:44px;min-height:44px;padding:0;background:none;color:var(--dim);font-size:24px;line-height:1}
+.searchrow>button{min-height:54px;padding:0 11px;font-size:15px;background:var(--panel);border:1px solid var(--line)}
+.searchrow>button.on{box-shadow:inset 0 0 0 1px var(--gold)}
+.tools{display:flex;gap:8px}
+.tools button{flex:1;background:var(--panel);font-size:15px}
+.tools button.on{background:var(--panel2);box-shadow:inset 0 0 0 1px var(--gold)}
+.keys{background:var(--panel);border-radius:12px;padding:8px;display:grid;gap:6px}
+.krow{display:grid;gap:6px}
+.keys button{padding:0;min-height:46px;font-size:18px;background:var(--panel2)}
+.keys .s{font-size:24px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--panel);border-radius:12px;padding:8px}
+.tiles button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:6px 10px;min-height:52px;background:var(--panel2);text-align:left}
+.tiles button b{font-weight:500;font-size:16px}
+.tiles button span{font-size:12px;color:var(--dim)}
+.tiles .ops{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tiles .ops button{align-items:center;min-height:44px}
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{background:var(--panel);border-radius:12px;padding:10px 12px}
+.row .h{display:flex;justify-content:space-between;align-items:baseline;font-size:17px}
+.row .h b{font-weight:500;font-variant-numeric:tabular-nums;font-size:20px}
+.row .b{height:10px;border-radius:5px;background:var(--panel2);margin-top:8px;overflow:hidden}
+.row .b i{display:block;height:100%}
+.cc{display:inline-flex;align-items:center;justify-content:center;width:22px;height:28px;border-radius:3px;color:#fff;font-weight:600;font-size:15px}
+.hand{display:flex;gap:3px;align-items:center;font-variant-numeric:tabular-nums}
+.sum{background:var(--panel);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;font-size:15px;color:var(--dim)}
+.sum b{color:var(--fg);font-weight:500}
+.list{background:var(--panel);border-radius:12px;overflow:hidden}
+.lh,.lr{display:grid;gap:4px;align-items:center;padding:0 10px}
+.lh{min-height:40px;font-size:12px;color:var(--dim);border-bottom:1px solid var(--line)}
+.lh button{min-height:36px;padding:0;background:none;color:var(--dim);font-size:13px;text-align:right}
+.lh button.on{color:var(--fg)}
+.lr{min-height:44px;border-bottom:1px solid var(--line);font-size:14px}
+.lr:last-child{border:0}
+.lr .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--dim)}
+.lr .n.top{color:var(--fg);font-weight:500}
+.more{width:100%;background:var(--panel2)}
+.cs{display:inline-block;min-width:1.55em;text-align:center}
+.s0{color:var(--sS)}.s1{color:var(--sH)}.s2{color:var(--sD)}.s3{color:var(--sC)}
+.card{display:flex;flex-direction:column;gap:10px;background:var(--panel);border-radius:14px;padding:16px}
+.card h2{margin:0;font-size:20px;font-weight:500}
+.file{display:flex;align-items:center;justify-content:center;background:var(--gold);color:#111;border-radius:12px;min-height:50px;font-weight:500;cursor:pointer}
+.small{font-size:13px;color:var(--dim)}
+.data{display:flex;flex-direction:column;gap:8px}
+.data .file{background:var(--panel2);color:var(--fg);min-height:44px}
+</style>
+</head><body>
+<div class="app" id="app"></div>
+<script>
+// ---- Ядро: классы рук (с точностью до мастей) и разбор диапазонов (синтаксис Windows-версии)
+const Core = (function () {
+  const NC = 134459;
+  const RANKS = '23456789TJQKA';
+  const SUITS = 'cdhs';
+
+  const pc = (m) => { let c = 0; while (m) { c += m & 1; m >>= 1; } return c; };
+  const bySize = [[], [], [], [], [], []];
+  for (let m = 8191; m >= 0; m--) { const k = pc(m); if (k <= 5) bySize[k].push(m); }
+
+  const PATS = [[5], [4, 1], [3, 2], [3, 1, 1], [2, 2, 1], [2, 1, 1, 1]];
+  const masks = new Uint16Array(NC * 4);
+  const mult = new Uint8Array(NC);
+  const index = new Map();
+  const keyOf = (a, b, c, d) => ((a * 8192 + b) * 8192 + c) * 8192 + d;
+
+  function multOf(g, cur) {
+    let perms = 1;
+    for (let t = 0; t < g; t++) perms *= 4 - t;
+    let run = 1;
+    for (let t = 1; t <= g; t++) {
+      if (t < g && cur[t] === cur[t - 1]) run++;
+      else { for (let f = 2; f <= run; f++) perms /= f; run = 1; }
+    }
+    return perms;
+  }
+
+  let n = 0;
+  const cur = [0, 0, 0, 0];
+  function walk(pat, i, prev) {
+    if (i === pat.length) {
+      const b = n * 4;
+      for (let t = 0; t < 4; t++) masks[b + t] = cur[t];
+      mult[n] = multOf(pat.length, cur);
+      index.set(keyOf(cur[0], cur[1], cur[2], cur[3]), n);
+      n++;
+      return;
+    }
+    const list = bySize[pat[i]];
+    const start = i > 0 && pat[i] === pat[i - 1] ? prev : 0;
+    for (let j = start; j < list.length; j++) { cur[i] = list[j]; walk(pat, i + 1, j); }
+    cur[i] = 0;
+  }
+  for (const p of PATS) walk(p, 0, 0);
+  if (n !== NC) throw new Error('classes ' + n);
+
+  // представитель класса: карты rank*4+suit по возрастанию; первая группа — пики, затем червы, бубны, трефы
+  const rep = new Uint8Array(NC * 5);
+  const rankKey = new Float64Array(NC);
+  const SUIT_OF_GROUP = [3, 2, 1, 0];
+  (function () {
+    const tmp = [0, 0, 0, 0, 0];
+    for (let c = 0; c < NC; c++) {
+      let k = 0;
+      for (let t = 0; t < 4; t++) {
+        const m = masks[c * 4 + t];
+        for (let r = 0; r < 13; r++) if (m & (1 << r)) tmp[k++] = r * 4 + SUIT_OF_GROUP[t];
+      }
+      tmp.sort((a, b) => a - b);
+      let key = 0;
+      for (let i = 4; i >= 0; i--) { rep[c * 5 + i] = tmp[i]; key = key * 13 + (tmp[i] >> 2); }
+      rankKey[c] = key;   // старший ранг — старший разряд: сортировка по убыванию = по старшинству
+    }
+  })();
+
+  const before = (a, b) => { const pa = pc(a), pb = pc(b); return pa !== pb ? pa > pb : a > b; };
+
+  function classOf(cards) {
+    const m = [0, 0, 0, 0];
+    for (let i = 0; i < 5; i++) m[cards[i] & 3] |= 1 << (cards[i] >> 2);
+    for (let i = 1; i < 4; i++) {
+      const v = m[i]; let j = i - 1;
+      while (j >= 0 && before(v, m[j])) { m[j + 1] = m[j]; j--; }
+      m[j + 1] = v;
+    }
+    return index.get(keyOf(m[0], m[1], m[2], m[3]));
+  }
+
+  // ------------------------------------------------------------ ввод руки
+  // «AsKh7d7c2s» → массив карт или null; error — причина
+  function parseHand(text) {
+    const s = text.replace(/\s+/g, '');
+    if (s.length !== 10) return { error: 'Нужно 5 карт' };
+    const cards = [];
+    for (let i = 0; i < 5; i++) {
+      const r = RANKS.indexOf(s[2 * i].toUpperCase());
+      const su = SUITS.indexOf(s[2 * i + 1].toLowerCase());
+      if (r < 0 || su < 0) return { error: 'Не разобрана карта «' + s.substr(2 * i, 2) + '»' };
+      const c = r * 4 + su;
+      cards.push(c);
+    }
+    const uniq = new Set(cards);
+    if (uniq.size !== 5) return { error: 'Карты повторяются' };
+    return { cards };
+  }
+
+  // ------------------------------------------------------------ синтаксис диапазонов
+  class SyntaxErr extends Error {
+    constructor(message, pos) { super(message); this.pos = pos; this.syntax = true; }
+  }
+  const NOT_HERE = 'Эта запись есть только в Windows-версии';
+
+  const HIGH = 0x1E00, BROAD = 0x0F00, MIDDLE = 0x00F0, LOW = 0x000F;
+  const hand = new Uint8Array(5);
+  function fromPredicate(pred) {
+    const res = new Uint8Array(NC);
+    for (let c = 0; c < NC; c++) {
+      const o = c * 5;
+      hand[0] = rep[o]; hand[1] = rep[o + 1]; hand[2] = rep[o + 2]; hand[3] = rep[o + 3]; hand[4] = rep[o + 4];
+      if (pred(hand)) res[c] = 1;
+    }
+    return res;
+  }
+
+  function shape(h) {
+    let a = 0, b = 0, c = 0, d = 0;
+    for (let i = 0; i < 5; i++) {
+      switch (h[i] & 3) { case 0: a++; break; case 1: b++; break; case 2: c++; break; default: d++; }
+    }
+    let t;
+    if (a < b) { t = a; a = b; b = t; }
+    if (c < d) { t = c; c = d; d = t; }
+    if (a < c) { t = a; a = c; c = t; }
+    if (b < d) { t = b; b = d; d = t; }
+    if (b < c) { t = b; b = c; c = t; }
+    let code = a;
+    if (b > 0) code = code * 10 + b;
+    if (c > 0) code = code * 10 + c;
+    if (d > 0) code = code * 10 + d;
+    return code;
+  }
+  const rankMask = (h) => { let m = 0; for (let i = 0; i < 5; i++) m |= 1 << (h[i] >> 2); return m; };
+  const isDs = (s) => s === 221 || s === 32;
+  const isTs = (s) => s === 311 || s === 32 || s === 41;
+
+  function countGroups(h, minCount, bitsBySuit, anyMask) {
+    const cnt = [0, 0, 0, 0], ms = [0, 0, 0, 0];
+    for (let i = 0; i < 5; i++) { const su = h[i] & 3; cnt[su]++; ms[su] |= 1 << (h[i] >> 2); }
+    let groups = 0, hits = 0;
+    for (let su = 0; su < 4; su++) {
+      if (cnt[su] >= minCount) { groups++; if (ms[su] & (bitsBySuit ? bitsBySuit[su] : anyMask)) hits++; }
+    }
+    return { groups, hits };
+  }
+  const groupHits = (h, mc, bits, any) => countGroups(h, mc, bits, any).hits;
+  const allGroupsHit = (h, mc, bits, any) => { const r = countGroups(h, mc, bits, any); return r.hits === r.groups; };
+
+  function rundown(h, gaps) {
+    const m = rankMask(h);
+    const ext = (m << 1) | ((m >> 12) & 1);
+    const span = 3 + gaps;
+    for (let lo = 0; lo + span <= 13; lo++) {
+      const hi = lo + span;
+      if (((ext >> lo) & 1) === 0 || ((ext >> hi) & 1) === 0) continue;
+      const between = ext & ((1 << hi) - 1) & ~((1 << (lo + 1)) - 1);
+      if (pc(between) >= 2) return true;
+    }
+    return false;
+  }
+
+  const NUT = [4096, 4096, 4096, 4096];   // префлоп: борда нет, нат каждой масти — туз
+  function structPredicate(name, token) {
+    switch (name) {
+      case 'np': return (h) => pc(rankMask(h)) === 5;
+      case 'ss': return (h) => shape(h) === 2111;
+      case 'ds': return (h) => isDs(shape(h));
+      case 'dsp': return (h) => shape(h) === 221;
+      case 'dts': return (h) => shape(h) === 32;
+      case 'ts': return (h) => isTs(shape(h));
+      case 'qs': return (h) => shape(h) === 41;
+      case 'ms': return (h) => shape(h) === 5;
+      case 'hds': return (h) => isDs(shape(h)) && allGroupsHit(h, 2, null, HIGH);
+      case 'lds': return (h) => isDs(shape(h)) && !allGroupsHit(h, 2, null, HIGH);
+      case '0g': return (h) => rundown(h, 0);
+      case '1g': return (h) => rundown(h, 1);
+      case '2g': return (h) => rundown(h, 2);
+      case 'ssn': return (h) => shape(h) === 2111 && groupHits(h, 2, NUT, 0) === 1;
+      case 'ssnn': return (h) => shape(h) === 2111 && groupHits(h, 2, NUT, 0) === 0;
+      case 'dsn': return (h) => isDs(shape(h)) && groupHits(h, 2, NUT, 0) === 1;
+      case 'dsdn': return (h) => isDs(shape(h)) && groupHits(h, 2, NUT, 0) === 2;
+      case 'dsnn': return (h) => isDs(shape(h)) && groupHits(h, 2, NUT, 0) === 0;
+      case 'tsn': return (h) => isTs(shape(h)) && groupHits(h, 3, NUT, 0) >= 1;
+      case 'tsnn': return (h) => isTs(shape(h)) && groupHits(h, 3, NUT, 0) === 0;
+      default: throw new SyntaxErr('Неизвестный токен ' + token, 0);
+    }
+  }
+
+  // шаблоны карт: «AA», «RR», «Axx», «KQssJThh9d» ...
+  function newSlot() { return { rank: 0x1FFF, rankVar: -1, suit: -1, suitVar: -1 }; }
+  function parsePattern(t) {
+    const slots = [];
+    let group = [];
+    let suitsInGroup = 0, groupStart = 0, inSuits = false;
+    let i = 0;
+    while (i < t.length) {
+      const ch = t[i];
+      let rs = null, len = 1;
+      const r = RANKS.indexOf(ch.toUpperCase());
+      if (r >= 0) { rs = newSlot(); rs.rank = 1 << r; }
+      else if (ch === 'R') { rs = newSlot(); rs.rankVar = 0; }
+      else if (ch === 'O') { rs = newSlot(); rs.rankVar = 1; }
+      else if (ch === '$') {
+        const nx = i + 1 < t.length ? t[i + 1] : '';
+        const cm = nx === 'B' ? BROAD : nx === 'M' ? MIDDLE : nx === 'L' ? LOW : 0;
+        if (cm === 0) throw new SyntaxErr('Неизвестный токен ' + t, i);
+        rs = newSlot(); rs.rank = cm; len = 2;
+      }
+      if (rs) {
+        if (inSuits) {
+          if (suitsInGroup < group.length) throw new SyntaxErr('В записи «' + t + '» рангов больше, чем мастей', groupStart);
+          group = []; suitsInGroup = 0; inSuits = false;
+        }
+        if (group.length === 0) groupStart = i;
+        group.push(rs); slots.push(rs);
+        i += len;
+        continue;
+      }
+      const suit = SUITS.indexOf(ch);
+      const suitVar = 'xywz'.indexOf(ch);
+      if (suit < 0 && suitVar < 0) throw new SyntaxErr('Недопустимый символ «' + ch + '» в записи «' + t + '»', i);
+      if (suit >= 0) throw new SyntaxErr('Конкретные масти (c d h s) в диапазоне не поддерживаются: пишите x y w z. Руку целиком вводите пятью картами.', i);
+      let target;
+      if (suitsInGroup < group.length) target = group[suitsInGroup];
+      else { target = newSlot(); slots.push(target); }
+      target.suitVar = suitVar;
+      suitsInGroup++; inSuits = true; i++;
+    }
+    if (inSuits && suitsInGroup < group.length) throw new SyntaxErr('В записи «' + t + '» рангов больше, чем мастей', groupStart);
+    if (slots.length === 0) throw new SyntaxErr('Пустой токен', 0);
+    if (slots.length > 5) throw new SyntaxErr('В записи «' + t + '» больше пяти карт', 0);
+    return slots;
+  }
+
+  function match(slots, k, h, used, rv0, rv1, sv, svUsed) {
+    if (k === slots.length) return true;
+    const s = slots[k];
+    for (let i = 0; i < 5; i++) {
+      if ((used >> i) & 1) continue;
+      const r = h[i] >> 2, su = h[i] & 3;
+      if (((s.rank >> r) & 1) === 0) continue;
+      let n0 = rv0, n1 = rv1;
+      if (s.rankVar === 0) {
+        if (rv0 < 0) { if (rv1 === r) continue; n0 = r; } else if (rv0 !== r) continue;
+      } else if (s.rankVar === 1) {
+        if (rv1 < 0) { if (rv0 === r) continue; n1 = r; } else if (rv1 !== r) continue;
+      }
+      let nsv = sv, nsu = svUsed;
+      if (s.suitVar >= 0) {
+        const shift = 3 * s.suitVar;
+        const c = (sv >> shift) & 7;
+        if (c === 0) {
+          if ((svUsed >> su) & 1) continue;
+          nsv = sv | ((su + 1) << shift);
+          nsu = svUsed | (1 << su);
+        } else if (c - 1 !== su) continue;
+      }
+      if (match(slots, k + 1, h, used | (1 << i), n0, n1, nsv, nsu)) return true;
+    }
+    return false;
+  }
+
+  const tokenCache = new Map();
+  function resolveToken(token) {
+    if (tokenCache.has(token)) return tokenCache.get(token);
+    let res;
+    if (token === '*') res = new Uint8Array(NC).fill(1);
+    else if (token.length > 3 && token.slice(0, 3).toLowerCase() === 'top' && token.indexOf('%') >= 0)
+      throw new SyntaxErr(NOT_HERE + ': «' + token + '»', 0);
+    else if (token.indexOf('%') >= 0) throw new SyntaxErr(NOT_HERE + ': «' + token + '»', 0);
+    else if (token.length > 1 && token[0] === '$' && /[a-z0-9]/.test(token[1])) res = fromPredicate(structPredicate(token.slice(1), token));
+    else {
+      const slots = parsePattern(token);
+      res = fromPredicate((h) => match(slots, 0, h, 0, -1, -1, 0, 0));
+    }
+    if (tokenCache.size > 60) tokenCache.clear();
+    tokenCache.set(token, res);
+    return res;
+  }
+
+  const or = (a, b) => { const r = new Uint8Array(NC); for (let i = 0; i < NC; i++) r[i] = a[i] | b[i]; return r; };
+  const and = (a, b) => { const r = new Uint8Array(NC); for (let i = 0; i < NC; i++) r[i] = a[i] & b[i]; return r; };
+  const not = (a) => { const r = new Uint8Array(NC); for (let i = 0; i < NC; i++) r[i] = a[i] ? 0 : 1; return r; };
+
+  function parseRange(text) {
+    if (!text.trim()) throw new SyntaxErr('Пустое выражение', 0);
+    let pos = 0;
+    const isDelim = (c) => c === ',' || c === ':' || c === '!' || c === '(' || c === ')' || /\s/.test(c);
+    const ws = () => { while (pos < text.length && /\s/.test(text[pos])) pos++; };
+    function operand() {
+      ws();
+      if (pos >= text.length) throw new SyntaxErr('Ожидался токен', pos);
+      const c = text[pos];
+      if (c === '!') { pos++; return not(operand()); }
+      if (c === '(') {
+        const open = pos; pos++;
+        const inner = expr();
+        ws();
+        if (pos >= text.length || text[pos] !== ')') throw new SyntaxErr('Не закрыта скобка', open);
+        pos++;
+        return inner;
+      }
+      if (c === '@') throw new SyntaxErr(NOT_HERE + ': диапазоны @…', pos);
+      const start = pos;
+      while (pos < text.length && !isDelim(text[pos])) pos++;
+      if (pos === start) throw new SyntaxErr('Неожиданный символ «' + c + '»', pos);
+      try { return resolveToken(text.slice(start, pos)); }
+      catch (e) { if (e.syntax) throw new SyntaxErr(e.message, start + e.pos); throw e; }
+    }
+    function expr() {
+      let left = operand();
+      for (;;) {
+        ws();
+        if (pos >= text.length) break;
+        const c = text[pos];
+        if (c === ',') { pos++; left = or(left, operand()); }
+        else if (c === ':') {
+          pos++; ws();
+          if (text.slice(pos, pos + 3).toLowerCase() === 'top' && pos + 3 < text.length) throw new SyntaxErr(NOT_HERE + ': top…%', pos);
+          left = and(left, operand());
+        }
+        else if (c === '!') { pos++; left = and(left, not(operand())); }
+        else break;
+      }
+      return left;
+    }
+    const set = expr();
+    ws();
+    if (pos < text.length) throw new SyntaxErr('Неожиданный символ «' + text[pos] + '»', pos);
+    return set;
+  }
+
+  return { NC, RANKS, SUITS, masks, mult, rep, rankKey, classOf, parseHand, parseRange, SyntaxErr };
+})();
+
+
+</script>
+<script>
+(function(){
+'use strict';
+const POS=['UTG','MP','CO','BTN','SB','BB'];
+const SYM=['♣','♦','♥','♠'];             // масть 0..3 = c d h s
+const SUIT_CLASS=[3,2,1,0];                 // c→s3 (зелёный), d→s2 (синий), h→s1 (красный), s→s0
+const FILL=['#2F7D34','#2A7FA0','#A82E2E','#6A686E'];
+const KIND_COLOR=['var(--fold)','var(--call)','var(--call)','var(--raise)','var(--allin)'];
+const $=(id)=>document.getElementById(id);
+const esc=(s)=>String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const S={man:null,pi:0,ni:-1,data:null,openPos:null,openGroup:null,keys:false,tiles:false,query:'',res:null,sortBy:0,shown:50,showList:false,msg:'',recent:[]};
+const mem=new Map();
+const THEMES=['auto','dark','light'],TNAME={auto:'Тема: авто',dark:'Тема: тёмная',light:'Тема: светлая'};
+function themeMode(){return lsGet('plo5m.theme','auto');}
+function applyTheme(){const m=themeMode(),r=document.documentElement;if(m==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',m);}
+applyTheme();
+let db=null,cache=new Map();
+
+// ---------- хранилище
+function openDb(){return new Promise((res)=>{try{const r=indexedDB.open('plo5m',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>res(null);r.onblocked=()=>res(null);}catch(e){res(null);}});}
+function kvGet(k){if(!db)return Promise.resolve(mem.get(k));return new Promise((res)=>{try{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(undefined);}catch(e){res(undefined);}});}
+function kvPutMany(items){if(!db){items.forEach(([k,v])=>mem.set(k,v));return Promise.resolve();}
+  return new Promise((res,rej)=>{const tx=db.transaction('kv','readwrite');const st=tx.objectStore('kv');items.forEach(([k,v])=>st.put(v,k));tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);tx.onabort=()=>rej(tx.error);});}
+function kvClear(){mem.clear();if(!db)return Promise.resolve();return new Promise((res)=>{const tx=db.transaction('kv','readwrite');tx.objectStore('kv').clear();tx.oncomplete=()=>res();tx.onerror=()=>res();});}
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+async function inflate(buf){const ds=new DecompressionStream('deflate-raw');return new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(ds)).arrayBuffer());}
+
+async function importFile(file){
+  S.msg='Читаю файл…';render();
+  try{
+    if(typeof DecompressionStream==='undefined')throw new Error('Браузер слишком старый: нужен iOS 16.4 или новее');
+    const buf=await file.arrayBuffer();const dv=new DataView(buf);
+    if(String.fromCharCode(...new Uint8Array(buf,0,4))!=='P5M1')throw new Error('Это не файл диапазонов (.plo5m)');
+    const ml=dv.getUint32(4,true);
+    const man=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,8,ml)));
+    const base=8+ml;const items=[];
+    for(const p of man.packs)for(const f in p.files){const [o,l]=p.files[f];items.push(['b:'+p.name+'/'+f,buf.slice(base+o,base+o+l)]);}
+    S.msg='Сохраняю на телефоне…';render();
+    await kvClear();
+    await kvPutMany(items.concat([['manifest',man]]));
+    cache=new Map();S.man=man;S.msg='';
+    pickPack(preferredPack(man));
+  }catch(e){S.msg='Не удалось загрузить: '+(e&&e.message?e.message:e);render();}
+}
+function preferredPack(man){const last=lsGet('plo5m.pack',null);const i=man.packs.findIndex(p=>p.name===last);if(i>=0)return i;const j=man.packs.findIndex(p=>p.stack===10000);return j>=0?j:0;}
+
+async function loadFreq(pack,file){
+  const k=pack+'/'+file;if(cache.has(k)){const v=cache.get(k);cache.delete(k);cache.set(k,v);return v;}
+  const raw=await kvGet('b:'+k);if(!raw)throw new Error('нет данных: '+file);
+  const arr=await inflate(raw);cache.set(k,arr);
+  while(cache.size>24)cache.delete(cache.keys().next().value);
+  return arr;
+}
+
+// ---------- стратегия
+const node=()=>S.man.packs[S.pi].nodes[S.ni];
+function reach(d,c){const n=d.node;let s=0;for(let k=0;k<d.act.length;k++)s+=d.act[k][c];
+  if(!n.fold)return s;if(!d.parent&&n.np)return s;const p=d.parent?d.parent[c]:100;return Math.max(p,s);}
+function labels(d){const L=d.node.acts.map(a=>({kind:a.k,label:a.l}));if(d.node.fold)L.push({kind:0,label:'Fold'});return L;}
+// доли действий руки: [действия..., fold]; null — рука не доходит
+function strat(d,c){const r=reach(d,c);if(r<=0)return null;const n=d.act.length;const out=new Array(n+(d.node.fold?1:0));let s=0;
+  for(let k=0;k<n;k++){const a=d.act[k][c];s+=a;out[k]=a/r;}if(d.node.fold)out[n]=Math.max(0,(r-s)/r);return {p:out,reach:r};}
+function totals(d,set){const n=d.act.length;const sum=new Float64Array(n+1);let rt=0;const m=Core.mult;
+  for(let c=0;c<Core.NC;c++){if(set&&!set[c])continue;const r=reach(d,c);if(r<=0)continue;const w=m[c];rt+=r*w;let s=0;
+    for(let k=0;k<n;k++){const a=d.act[k][c];s+=a;sum[k]+=a*w;}if(d.node.fold)sum[n]+=(r-s)*w;}
+  const p=[];for(let k=0;k<=n;k++)p.push(rt>0?sum[k]/rt:0);
+  if(!d.node.fold)p.pop();
+  return {p,combos:rt/100};}
+
+async function openNode(ni,keepQuery){
+  S.ni=ni;S.data=null;S.res=null;S.showList=false;S.shown=50;S.msg='';render();
+  const pack=S.man.packs[S.pi];const nd=pack.nodes[ni];
+  try{
+    const parent=nd.parent?await loadFreq(pack.name,nd.parent):null;
+    const act=[];for(const a of nd.acts)act.push(await loadFreq(pack.name,a.f));
+    S.data={node:nd,parent,act,tot:null,cum:null};S.data.tot=totals(S.data,null);
+  }catch(e){S.msg='Не удалось прочитать диапазон: '+e.message;}
+  if(!keepQuery)S.query='';
+  rememberRecent();evalQuery(true);render();
+}
+function pickPack(pi){S.pi=pi;lsSet('plo5m.pack',S.man.packs[pi].name);S.openPos=null;
+  const key=lsGet('plo5m.node.'+S.man.packs[pi].name,null);let ni=key?S.man.packs[pi].nodes.findIndex(n=>n.key===key):-1;
+  if(ni<0)ni=Math.max(0,S.man.packs[pi].nodes.findIndex(n=>n.group==='Open'));
+  S.ni=-1;openNode(ni,false);}
+function rememberRecent(){const p=S.man.packs[S.pi],n=p.nodes[S.ni];if(!n)return;lsSet('plo5m.node.'+p.name,n.key);
+  let r=lsGet('plo5m.recent',[]).filter(x=>!(x.p===p.name&&x.k===n.key));r.unshift({p:p.name,k:n.key});r=r.slice(0,8);lsSet('plo5m.recent',r);S.recent=r;}
+
+// ---------- ввод
+const RE_KEYS=/^(?:[2-9TJQKA][cdhs]?)+$/i;
+const RE_FULL=/^([2-9TJQKA][cdhs]){5}$/i,RE_PART=/^([2-9TJQKA][cdhs]){1,4}[2-9TJQKA]?$/i;
+let timer=null;
+function evalQuery(now){clearTimeout(timer);if(now)return doEval();timer=setTimeout(()=>{doEval();render(true);},250);}
+function doEval(){
+  const q=S.query.trim(),d=S.data;S.res=null;S.showList=false;S.shown=50;
+  if(!q||!d)return;
+  const compact=q.replace(/\s+/g,'');
+  if(RE_FULL.test(compact)){const h=Core.parseHand(compact);
+    if(h.error){S.res={type:'err',text:h.error};return;}
+    const c=Core.classOf(h.cards);S.res={type:'hand',cards:h.cards,c,st:strat(d,c)};return;}
+  if(S.keys&&RE_KEYS.test(compact)){S.res={type:'part',n:(compact.match(/[2-9TJQKA]/gi)||[]).length,bare:/[2-9TJQKA]$/i.test(compact)};return;}
+  if(RE_PART.test(compact)){S.res={type:'part',n:Math.ceil(compact.length/2)};return;}
+  try{const set=Core.parseRange(q);S.res={type:'range',set,tot:totals(d,set)};}
+  catch(e){S.res={type:'err',text:(e.syntax?e.message:'Не удалось разобрать: '+e.message)+(e.syntax&&e.pos!=null?' (символ '+(e.pos+1)+')':'')};}
+}
+function keyInput(v,k){
+  if(k==='⌫')return v.slice(0,-1);
+  const cnt=(v.match(/[2-9TJQKA]/gi)||[]).length;
+  if(/^[cdhs]$/.test(k)){const m=v.match(/[2-9TJQKA]+$/i);if(!m)return v;
+    return v.slice(0,v.length-m[0].length)+m[0].split('').map(r=>r+k).join('');}
+  if(cnt>=5)return v;
+  return v+k;}
+function setQuery(v,now){S.query=v;evalQuery(now);}
+
+// ---------- вывод
+function cardSpan(c){return '<span class="cc" style="background:'+FILL[c&3]+'">'+Core.RANKS[c>>2]+'</span>';}
+function handHtml(cards){return '<span class="hand">'+cards.slice().sort((a,b)=>(b>>2)-(a>>2)||(b&3)-(a&3)).map(cardSpan).join('')+'</span>';}
+function repCards(c){return Array.from(Core.rep.subarray(c*5,c*5+5));}
+const pct=(x)=>{const v=Math.round(x*1000)/10;return (v%1===0?v.toFixed(0):v.toFixed(1))+'%';};
+const num=(x)=>x>=100?Math.round(x).toLocaleString('ru-RU'):(Math.round(x*10)/10).toString().replace('.',',');
+
+function tableSvg(n,stack,hero){
+  const SL=[[180,226],[48,172],[48,84],[180,32],[312,84],[312,172]];
+  const BET=[[180,156],[92,140],[92,100],[180,78],[268,100],[268,140]];
+  const DB=[[238,208],[98,196],[98,62],[222,48],[266,62],[270,196]];
+  let s='<svg class="table" viewBox="0 0 360 262" role="img" aria-label="Стол">';
+  s+='<ellipse class="t-felt" cx="180" cy="128" rx="150" ry="88"/>';
+  s+='<rect class="t-potbg" x="138" y="116" width="84" height="22" rx="11"/><text class="t-pot" x="180" y="131" text-anchor="middle">Банк '+fmtBB(n.pot)+'</text>';
+  if(hero){const cs=hero.slice().sort((a,b)=>(b>>2)-(a>>2)||(b&3)-(a&3));
+    cs.forEach((c,i)=>{const x=137+i*16,y=184;
+      s+='<rect x="'+x+'" y="'+y+'" width="22" height="30" rx="3" fill="'+FILL[c&3]+'" stroke="#0e0f10" stroke-width=".8"/>'+
+      '<text x="'+(x+11)+'" y="'+(y+21)+'" text-anchor="middle" font-size="17" font-weight="600" fill="#fff">'+Core.RANKS[c>>2]+'</text>';});}
+  for(let seat=0;seat<6;seat++){
+    const slot=(seat-n.hero+6)%6,[cx,cy]=SL[slot],h=seat===n.hero,f=n.folded[seat],bet=n.bets[seat];
+    if(!f&&(!h||!hero)){for(let i=0;i<5;i++)s+='<rect class="t-back" x="'+(cx-27+i*11)+'" y="'+(cy-30)+'" width="15" height="21" rx="2.5"/>';}
+    s+='<g class="t-plate'+(h?' hero':'')+(f?' off':'')+'"><rect class="t-plate'+(h?' hero':'')+'" x="'+(cx-41)+'" y="'+(cy-18)+'" width="82" height="36" rx="7"/></g>';
+    s+='<text class="t-name'+(h?' hero':'')+'" x="'+cx+'" y="'+(cy-3)+'" text-anchor="middle">'+POS[seat]+(h?' · Hero':'')+'</text>';
+    s+='<text class="t-stack" x="'+cx+'" y="'+(cy+13)+'" text-anchor="middle">'+(f?'Fold':fmtBB(Math.max(0,stack-bet)))+'</text>';
+    if(bet>0){const [bx,by]=BET[slot];const k=bet<=100?1:bet<=400?2:bet<=1500?3:4;
+      for(let i=0;i<k;i++)s+='<ellipse class="t-chip" cx="'+bx+'" cy="'+(by-i*3.5)+'" rx="10" ry="5"/>';
+      s+='<text class="t-bet" x="'+bx+'" y="'+(by+15)+'" text-anchor="middle">'+fmtBB(bet)+'</text>';}
+    if(seat===3){const [dx,dy]=DB[slot];s+='<circle class="t-dbtn" cx="'+dx+'" cy="'+dy+'" r="9"/><text class="t-dtxt" x="'+dx+'" y="'+(dy+4)+'" text-anchor="middle">D</text>';}
+  }
+  return s+'</svg>';
+}
+const fmtBB=(u)=>{const v=u/100;return (v%1===0?v.toFixed(0):(Math.round(v*100)/100).toString())+' BB';};
+
+function barHtml(L,p){return '<div class="bar">'+L.map((l,k)=>'<i style="width:'+(p[k]*100).toFixed(2)+'%;background:'+KIND_COLOR[l.kind]+'"></i>').join('')+'</div>';}
+function legendHtml(L,p,combos){return '<div class="legend">'+orderFoldFirst(L,p).map(([l,v])=>
+  '<div class="lg"><span class="d" style="background:'+KIND_COLOR[l.kind]+'"></span><span>'+esc(l.label)+'</span><b>'+pct(v)+(combos!=null?'<em>'+num(v*combos)+' комб.</em>':'')+'</b></div>').join('')+'</div>';}
+function orderFoldFirst(L,p){const a=L.map((l,k)=>[l,p[k]]);const f=a.filter(x=>x[0].label==='Fold'&&x[0].kind===0);return f.concat(a.filter(x=>!f.includes(x)));}
+
+function resultHtml(){
+  const d=S.data,r=S.res;if(!d)return '';const L=labels(d);
+  if(!r){const t=d.tot;
+    if(t.combos<=0)return '<div class="note">В этом сценарии нет рук.</div>';
+    const [f,rest]=[0,0];const ord=orderFoldFirst(L,t.p);
+    return '<div class="bar">'+ord.map(([l,v])=>'<i style="width:'+(v*100).toFixed(2)+'%;background:'+KIND_COLOR[l.kind]+'"></i>').join('')+'</div>'+legendHtml(L,t.p,t.combos)+
+      '<div class="note">Весь диапазон сценария: '+num(t.combos)+' комбинаций. Введите руку или фильтр, чтобы увидеть частоты по ней.</div>';}
+  if(r.type==='err')return '<div class="err">'+esc(r.text)+'</div>';
+  if(r.type==='part')return '<div class="note">Введено карт: '+r.n+' из 5.'+(r.bare?' Выберите масть: она применится ко всем картам без масти.':'')+'</div>';
+  if(r.type==='hand'){
+    if(!r.st)return '<div class="row"><div class="h"><span>'+handHtml(r.cards)+'</span></div><div class="note" style="margin-top:6px">До этого сценария такая рука не доходит: в диапазоне её нет.</div></div>';
+    const rows=orderFoldFirst(L,r.st.p).map(([l,v])=>'<div class="row"><div class="h"><span>'+esc(l.label)+'</span><b>'+pct(v)+'</b></div><div class="b"><i style="width:'+(v*100).toFixed(1)+'%;background:'+KIND_COLOR[l.kind]+'"></i></div></div>').join('');
+    return '<div class="rows">'+rows+'</div>'+(r.st.reach<100?'<div class="note">Рука доходит до сценария в '+r.st.reach+'% случаев.</div>':'');}
+  // диапазон
+  const t=r.tot;if(t.combos<=0)return '<div class="note">В диапазоне нет рук, которые доходят до этого сценария.</div>';
+  let h='<div class="sum"><span>Комбинаций в выборке</span><b>'+num(t.combos)+'</b></div>'+
+    '<div class="sum"><span>От диапазона сценария</span><b>'+pct(t.combos/Math.max(1e-9,d.tot.combos))+'</b></div>'+
+    barHtml(orderFoldFirst(L,t.p).map(x=>x[0]),orderFoldFirst(L,t.p).map(x=>x[1]))+legendHtml(L,t.p,t.combos);
+  h+=S.showList?listHtml(L):'<button class="more" id="showlist">Показать руки</button>';return h;
+}
+function listItems(){const d=S.data,set=S.res.set,L=labels(d),items=[];
+  for(let c=0;c<Core.NC;c++){if(!set[c])continue;const st=strat(d,c);if(st)items.push({c,p:st.p,r:st.reach});}
+  const k=S.sortBy;items.sort((a,b)=>(b.p[k]-a.p[k])||(Core.rankKey[b.c]-Core.rankKey[a.c]));return items;}
+function listHtml(L){
+  const items=listItems(),cols=L.length,gt='grid-template-columns:minmax(120px,1.6fr) repeat('+cols+',minmax(0,1fr))';
+  const ord=L.map((l,k)=>k);
+  let h='<div class="list"><div class="lh" style="'+gt+'"><span>Рука</span>'+L.map((l,k)=>'<button data-sort="'+k+'" class="'+(S.sortBy===k?'on':'')+'">'+esc(l.label)+(S.sortBy===k?' ↓':'')+'</button>').join('')+'</div>';
+  const shown=items.slice(0,S.shown);
+  h+=shown.map(it=>{const top=it.p.indexOf(Math.max.apply(null,it.p));return '<div class="lr" style="'+gt+'"><span>'+handHtml(repCards(it.c))+'</span>'+it.p.map((v,k)=>'<span class="n'+(k===top?' top':'')+'">'+Math.round(v*100)+'</span>').join('')+'</div>';}).join('');
+  h+='</div>';
+  if(items.length>S.shown)h+='<button class="more" id="more">Ещё '+Math.min(50,items.length-S.shown)+' (всего '+items.length+' классов рук)</button>';
+  else h+='<div class="note">Показаны все '+items.length+' классов рук (масти в списке условные: рука считается с точностью до мастей).</div>';
+  return h;}
+
+const TILES=[['$ds','две масти по две'],['$dsdn','обе пары мастей с тузом'],['$dsn','одна пара мастей с тузом'],['$ss','одна масть из двух'],['$np','без пар'],['$0g','рандаун без дыр'],
+  ['$hds','ds со старшими'],['$lds','ds без старших'],['AA','минимум два туза'],['KK','минимум два короля'],['RR','любая пара'],['RRR','сет и выше'],['$ts','три в масти'],['$qs','четыре в масти']];
+function render(keepFocus){
+  const root=$('app');const man=S.man;
+  const had=document.activeElement&&document.activeElement.id==='q';const selS=had?document.activeElement.selectionStart:0;
+  if(!man){root.innerHTML='<div class="card"><h2>Загрузите диапазоны</h2><div class="small">Выберите файл .plo5m, который сделала Windows-версия кнопкой «Экспорт для телефона». Он сохранится на этом телефоне, повторно загружать не нужно.</div><label class="file">Выбрать файл<input type="file" id="file" hidden></label>'+(S.msg?'<div class="'+(S.msg.startsWith('Не')?'err':'note')+'">'+esc(S.msg)+'</div>':'')+'</div>';bind();return;}
+  const pack=man.packs[S.pi],nd=S.ni>=0?pack.nodes[S.ni]:null;
+  let h='<div class="top"><button class="th" id="theme">'+TNAME[themeMode()]+'</button><div class="seg">'+man.packs.map((p,i)=>'<button data-pack="'+i+'" class="'+(i===S.pi?'on':'')+'">'+Math.round(p.stack/100)+'</button>').join('')+'</div></div>';
+  const rec=S.recent.length?S.recent:lsGet('plo5m.recent',[]);
+  const chips=rec.map(x=>{const pi=man.packs.findIndex(p=>p.name===x.p);if(pi<0)return '';const ni=man.packs[pi].nodes.findIndex(n=>n.key===x.k);if(ni<0)return '';
+    return '<button data-rec="'+pi+','+ni+'">'+Math.round(man.packs[pi].stack/100)+' · '+esc(short(man.packs[pi].nodes[ni].title))+'</button>';}).join('');
+  h+='<div class="pos">'+POS.map((p,i)=>'<button data-pos="'+i+'" class="'+(S.openPos===i?'on':'')+(nd&&nd.hero===i&&S.openPos!==i?' cur':'')+'">'+p+'</button>').join('')+'</div>';
+  if(S.openPos!=null)h+=sheetHtml(pack,S.openPos);
+  if(nd){
+    h+=tableSvg(nd,pack.stack,S.res&&S.res.type==='hand'?S.res.cards:null);}
+  if(S.msg)h+='<div class="err">'+esc(S.msg)+'</div>';
+  h+='<div class="searchrow"><div class="field"><input id="q" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Рука или фильтр" value="'+esc(S.query)+'"'+(S.keys?' inputmode="none"':'')+'>'+(S.query?'<button class="x" id="clear" aria-label="Очистить">×</button>':'')+'</div><button id="keys" class="kb'+(S.keys?' on':'')+'">Карты</button><button id="tiles">Фильтры</button></div>';
+  if(S.keys)h+=keysHtml();
+  if(S.tiles)h+=tilesHtml();
+  h+='<div id="result" style="display:flex;flex-direction:column;gap:10px">'+resultHtml()+'</div>';
+  h+='<div class="data"><div class="small">Данные: '+esc(man.created||'')+' · '+man.packs.map(p=>Math.round(p.stack/100)+' BB, '+p.nodes.length+' сценариев').join(' · ')+'</div><label class="file">Загрузить новый файл<input type="file" id="file" hidden></label></div>';
+  root.innerHTML=h;bind();
+  if(had||keepFocus){const q=$('q');if(q&&(had)){q.focus({preventScroll:true});try{q.setSelectionRange(selS,selS);}catch(e){}}}
+}
+function short(t){return t.replace('  ·  ',' · ');}
+function sheetHtml(pack,pos){
+  const groups=new Map();pack.nodes.forEach((n,i)=>{if(n.hero!==pos)return;if(!groups.has(n.group))groups.set(n.group,{o:n.order,items:[]});groups.get(n.group).items.push([n,i]);});
+  if(!groups.size)return '<div class="sheet"><div class="note" style="padding:12px">Для этой позиции в пакете нет сценариев.</div></div>';
+  let h='<div class="sheet">';[...groups.entries()].sort((a,b)=>a[1].o-b[1].o).forEach(([g,v])=>{const open=S.openGroup===g;
+    h+='<button class="gr'+(open?' on':'')+'" data-group="'+esc(g)+'">'+esc(g)+'<span>'+v.items.length+(open?' ▴':' ▾')+'</span></button>';
+    if(open){h+='<div class="sub">';v.items.forEach(([n,i])=>{h+='<button class="sc'+(i===S.ni?' on':'')+'" data-node="'+i+'">'+esc(n.title.split('  ·  ')[1]||'RFI')+'</button>';});h+='</div>';}});
+  return h+'</div>';}
+function keysHtml(){const R='AKQJT98765432';
+  let h='<div class="keys"><div class="krow" style="grid-template-columns:repeat(7,1fr)">'+R.slice(0,7).split('').map(r=>'<button data-k="'+r+'">'+r+'</button>').join('')+'</div>'+
+  '<div class="krow" style="grid-template-columns:repeat(6,1fr)">'+R.slice(7).split('').map(r=>'<button data-k="'+r+'">'+r+'</button>').join('')+'</div>'+
+  '<div class="krow" style="grid-template-columns:repeat(4,1fr) 1.4fr">'+[['s',3],['h',2],['d',1],['c',0]].map(([c,i])=>'<button class="s s'+SUIT_CLASS[i]+'" data-k="'+c+'">'+SYM[i]+'</button>').join('')+'<button data-k="⌫">⌫</button></div></div>';return h;}
+function tilesHtml(){return '<div class="tiles">'+TILES.map(([t,d])=>'<button data-tile="'+esc(t)+'"><b>'+esc(t)+'</b><span>'+esc(d)+'</span></button>').join('')+
+  '<div class="ops">'+[[',','или'],[':','и'],['!','не'],['(','('],[')',')']].map(([t,d])=>'<button data-op="'+t+'"><b>'+esc(t)+'</b></button>').join('')+'</div>'+
+  '<div class="small" style="grid-column:1/-1">Масти в диапазоне — буквами x y w z (одна буква — одна масть). R, O — ранги, $B $M $L — старшие, средние, младшие.</div></div>';}
+
+function randomHand(){const d=S.data;if(!d)return;
+  if(!d.cum){const cum=new Float64Array(Core.NC);let t=0;for(let c=0;c<Core.NC;c++){const r=reach(d,c);t+=r>0?r*Core.mult[c]:0;cum[c]=t;}d.cum=cum;}
+  const total=d.cum[Core.NC-1];if(total<=0)return;const x=Math.random()*total;let lo=0,hi=Core.NC-1;
+  while(lo<hi){const m=(lo+hi)>>1;if(d.cum[m]>x)hi=m;else lo=m+1;}
+  const perm=[0,1,2,3];for(let i=3;i>0;i--){const j=Math.floor(Math.random()*(i+1));[perm[i],perm[j]]=[perm[j],perm[i]];}
+  const cards=repCards(lo).map(c=>(c>>2)*4+perm[c&3]);
+  S.keys=false;setQuery(cards.sort((a,b)=>(b>>2)-(a>>2)).map(c=>Core.RANKS[c>>2]+Core.SUITS[c&3]).join(''),true);render();}
+
+function bind(){
+  const f=$('file');if(f)f.onchange=()=>{if(f.files[0])importFile(f.files[0]);};
+  const q=$('q');if(q){q.oninput=()=>{S.query=q.value;const x=$('clear');evalQuery(false);if(!S.query!==!x)render(true);};
+    q.onkeydown=(e)=>{if(e.key==='Enter'){q.blur();evalQuery(true);render();}};}
+}
+document.addEventListener('click',(e)=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.pack!=null){S.openPos=null;pickPack(+t.dataset.pack);return;}
+  if(t.dataset.rec){const [pi,ni]=t.dataset.rec.split(',').map(Number);if(pi!==S.pi){S.pi=pi;lsSet('plo5m.pack',S.man.packs[pi].name);}S.openPos=null;openNode(ni,false);return;}
+  if(t.dataset.pos!=null){const p=+t.dataset.pos;S.openPos=S.openPos===p?null:p;S.openGroup=null;render();return;}
+  if(t.dataset.group!=null){S.openGroup=S.openGroup===t.dataset.group?null:t.dataset.group;render();return;}
+  if(t.id==='theme'){const m=THEMES[(THEMES.indexOf(themeMode())+1)%3];lsSet('plo5m.theme',m);applyTheme();render();return;}
+  if(t.dataset.node!=null){S.openPos=null;S.openGroup=null;openNode(+t.dataset.node,true);return;}
+  if(t.id==='clear'){setQuery('',true);render();const q=$('q');if(q&&!S.keys)q.focus();return;}
+  if(t.id==='tiles'){S.tiles=!S.tiles;render();return;}
+  if(t.id==='keys'){S.keys=!S.keys;render();return;}
+  if(t.id==='rand'){randomHand();return;}
+  if(t.id==='showlist'){S.showList=true;render();return;}
+  if(t.id==='more'){S.shown+=50;render();return;}
+  if(t.dataset.sort!=null){S.sortBy=+t.dataset.sort;S.shown=50;render();return;}
+  if(t.dataset.k){const k=t.dataset.k;let v=S.query;v=keyInput(v,k);setQuery(v,true);if(S.res&&S.res.type==='hand')S.keys=false;render();return;}
+  if(t.dataset.tile){let v=S.query.trim();if(v&&!/[,:!(]$/.test(v))v+=':';setQuery(v+t.dataset.tile,true);render();return;}
+  if(t.dataset.op){setQuery(S.query+t.dataset.op,true);render();return;}
+});
+(async function start(){
+  db=await openDb();S.recent=lsGet('plo5m.recent',[]);
+  const man=await kvGet('manifest');
+  if(man&&man.packs&&man.packs.length){S.man=man;pickPack(preferredPack(man));}else render();
+})();
+})();
+</script>
+
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body></html>
