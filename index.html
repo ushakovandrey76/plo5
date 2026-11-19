@@ -1,5 +1,5 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PLO5">
@@ -27,7 +27,8 @@
   --felt:#dfe3e7;--feltEdge:#c9ced4;--plate:#fff;--plateLine:#8b9097;--chip:#7d8289;
   --fold:#8a93a0;--call:#2f8a52;--raise:#c8701a;--allin:#b0301f;--err:#c23a33;
   --sS:#23272b;--sH:#d23b36;--sD:#2d6fd0;--sC:#2e8b4f;color-scheme:light}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--fg);font:400 16px/1.35 var(--font);margin:0;
   padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
 .app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
@@ -548,7 +549,7 @@ async function openNode(ni,keepQuery){
     const act=[];for(const a of nd.acts)act.push(await loadFreq(pack.name,a.f));
     S.data={node:nd,parent,act,tot:null,cum:null};S.data.tot=totals(S.data,null);
   }catch(e){S.msg='Не удалось прочитать диапазон: '+e.message;}
-  if(!keepQuery)S.query='';
+  if(!keepQuery){S.query='';S.keys=true;}
   rememberRecent();evalQuery(true);render();
 }
 function pickPack(pi){S.pi=pi;lsSet('plo5m.pack',S.man.packs[pi].name);S.openPos=null;
@@ -681,8 +682,11 @@ function render(keepFocus){
   if(had||keepFocus){const q=$('q');if(q&&(had)){q.focus({preventScroll:true});try{q.setSelectionRange(selS,selS);}catch(e){}}}
 }
 function short(t){return t.replace('  ·  ',' · ');}
+const GMAP={'Open vs 3bet':['vs 3bet',5],'Open vs Squeeze':['vs 3bet',5],'Cold 4bet':['vs 3bet',5],'3bet vs 4bet':['vs 4bet',7]};
 function sheetHtml(pack,pos){
-  const groups=new Map();pack.nodes.forEach((n,i)=>{if(n.hero!==pos)return;if(!groups.has(n.group))groups.set(n.group,{o:n.order,items:[]});groups.get(n.group).items.push([n,i]);});
+  const groups=new Map();pack.nodes.forEach((n,i)=>{if(n.hero!==pos)return;const m=GMAP[n.group]||[n.group,n.order];
+    if(!groups.has(m[0]))groups.set(m[0],{o:m[1],items:[]});groups.get(m[0]).items.push([n,i]);});
+  groups.forEach(g=>g.items.sort((a,b)=>a[0].order-b[0].order||a[1]-b[1]));
   if(!groups.size)return '<div class="sheet"><div class="note" style="padding:12px">Для этой позиции в пакете нет сценариев.</div></div>';
   let h='<div class="sheet">';[...groups.entries()].sort((a,b)=>a[1].o-b[1].o).forEach(([g,v])=>{const open=S.openGroup===g;
     h+='<button class="gr'+(open?' on':'')+'" data-group="'+esc(g)+'">'+esc(g)+'<span>'+v.items.length+(open?' ▴':' ▾')+'</span></button>';
@@ -716,8 +720,8 @@ document.addEventListener('click',(e)=>{
   if(t.dataset.pos!=null){const p=+t.dataset.pos;S.openPos=S.openPos===p?null:p;S.openGroup=null;render();return;}
   if(t.dataset.group!=null){S.openGroup=S.openGroup===t.dataset.group?null:t.dataset.group;render();return;}
   if(t.id==='theme'){const m=THEMES[(THEMES.indexOf(themeMode())+1)%3];lsSet('plo5m.theme',m);applyTheme();render();return;}
-  if(t.dataset.node!=null){S.openPos=null;S.openGroup=null;openNode(+t.dataset.node,true);return;}
-  if(t.id==='clear'){setQuery('',true);render();const q=$('q');if(q&&!S.keys)q.focus();return;}
+  if(t.dataset.node!=null){S.openPos=null;S.openGroup=null;openNode(+t.dataset.node,false);return;}
+  if(t.id==='clear'){S.keys=true;setQuery('',true);render();return;}
   if(t.id==='tiles'){S.tiles=!S.tiles;render();return;}
   if(t.id==='keys'){S.keys=!S.keys;render();return;}
   if(t.id==='rand'){randomHand();return;}
